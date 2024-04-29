@@ -2,6 +2,13 @@
 #include <WiFiNINA.h>
 #include <utility/wifi_drv.h>
 
+//timings
+unsigned long irMillis = 0;
+
+//motor driver pins
+const int in1 = 9;
+const int in2 = 
+
 //colour sensor pins
 #define out A5
 #define S0 A4
@@ -82,22 +89,14 @@ void setup() {
 }
 
 void loop() {
-  // //ir sensor states
-  int ir1State = digitalRead(ir1);
-  int ir2State = digitalRead(ir2);
-  int ir3State = digitalRead(ir3);
-  int ir4State = digitalRead(ir4);
+  //millis
+  unsigned long currentMillis = millis();
 
-  // Serial.print(ir1State);
-  // Serial.print(" ");
-  // Serial.print(ir2State);
-  // Serial.print(" ");
-  // Serial.print(ir3State);
-  // Serial.print(" ");
-  // Serial.print(ir4State);
-  // Serial.println(" ");
-
-
+  //infared data 
+  if(currentMillis - irMillis >= 500){
+    irMillis = currentMillis;
+    //readIR();
+  }
 
   //color sensor data
 
@@ -133,11 +132,26 @@ void loop() {
 */
 }
 
+void readIR(){
+  int ir1State = digitalRead(ir1);
+  int ir2State = digitalRead(ir2);
+  int ir3State = digitalRead(ir3);
+  int ir4State = digitalRead(ir4);
+
+  Serial.print(ir1State);
+  Serial.print(" ");
+  Serial.print(ir2State);
+  Serial.print(" ");
+  Serial.print(ir3State);
+  Serial.print(" ");
+  Serial.print(ir4State);
+  Serial.println(" ");
+
+}
+
 int ultrasonicDistance(){
   digitalWrite(trigPin, LOW);
-  delayMicroseconds(1); //change later to make it not use delay
   digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
 
   long duration = pulseIn(echoPin, HIGH);
