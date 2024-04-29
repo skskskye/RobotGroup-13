@@ -6,8 +6,10 @@
 unsigned long irMillis = 0;
 
 //motor driver pins
-const int in1 = 9;
-const int in2 = 
+const int in1 = 3;
+const int in2 = 5;
+const int in3 = 6;
+const int in4 = 9;
 
 //colour sensor pins
 #define out A5
@@ -40,12 +42,14 @@ char password[] = "";
 void setup() {
   Serial.begin(9600);
 
+  //onboard leds
   WiFiDrv::pinMode(redLED, OUTPUT);
   WiFiDrv::pinMode(greenLED, OUTPUT);
   WiFiDrv::pinMode(blueLED, OUTPUT);
 
   
 
+  //connect to internet
   while(!Serial);
 
   Serial.println("attempting to connect");
@@ -58,12 +62,12 @@ void setup() {
     delay(5000);
   }
 
+  //once connected change led c olour
   Serial.println("CONNECTED!");
   WiFiDrv::analogWrite(redLED, 0);
   WiFiDrv::analogWrite(greenLED, 255);
   WiFiDrv::analogWrite(blueLED, 255);
   Serial.println(WiFi.localIP());
-
 
   //intializing colour sensor
   pinMode(S0, OUTPUT);
@@ -86,6 +90,15 @@ void setup() {
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 
+  //intalizing motors
+  pinMode(in1, OTUPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+
 }
 
 void loop() {
@@ -95,41 +108,43 @@ void loop() {
   //infared data 
   if(currentMillis - irMillis >= 500){
     irMillis = currentMillis;
-    //readIR();
+    readIR();
   }
+
+
 
   //color sensor data
 
   //for red
-  /*
-  digitalWrite(S2, LOW);
-  digitalWrite(S3, LOW);
 
-  int redFreq = pulseIn(out, LOW);
+  // digitalWrite(S2, LOW);
+  // digitalWrite(S3, LOW);
 
-  Serial.print(redFreq);
-  Serial.print(" ");
+  // int redFreq = pulseIn(out, LOW);
 
-  //for green
-  digitalWrite(S2, HIGH);
-  digitalWrite(S3, HIGH);
+  // Serial.print(redFreq);
+  // Serial.print(" ");
 
-  int greenFreq = pulseIn(out, LOW);
+  // //for green
+  // digitalWrite(S2, HIGH);
+  // digitalWrite(S3, HIGH);
 
-  Serial.print(greenFreq);
-  Serial.print(" ");
+  // int greenFreq = pulseIn(out, LOW);
 
-  //for blue
-  digitalWrite(S2, LOW);
-  digitalWrite(S3, HIGH);
+  // Serial.print(greenFreq);
+  // Serial.print(" ");
 
-  int blueFreq = pulseIn(out, LOW);
+  // //for blue
+  // digitalWrite(S2, LOW);
+  // digitalWrite(S3, HIGH);
 
-  Serial.print(blueFreq);
-  Serial.print(" ");
+  // int blueFreq = pulseIn(out, LOW);
 
-  Serial.println("");
-*/
+  // Serial.print(blueFreq);
+  // Serial.print(" ");
+
+  // Serial.println("");
+
 }
 
 void readIR(){
