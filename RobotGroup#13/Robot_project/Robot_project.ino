@@ -47,14 +47,15 @@ void setup() {
   WiFiDrv::pinMode(greenLED, OUTPUT);
   WiFiDrv::pinMode(blueLED, OUTPUT);
 
-  
+
 
   //connect to internet
-  while(!Serial);
+  while (!Serial)
+    ;
 
   Serial.println("attempting to connect");
-  
-  while(WiFi.begin(ssid, password) != WL_CONNECTED){
+
+  while (WiFi.begin(ssid, password) != WL_CONNECTED) {
     WiFiDrv::analogWrite(redLED, 255);
     WiFiDrv::analogWrite(greenLED, 0);
     WiFiDrv::analogWrite(blueLED, 0);
@@ -91,22 +92,21 @@ void setup() {
   pinMode(echoPin, INPUT);
 
   //intalizing motors
-  pinMode(in1, OTUPUT);
+  pinMode(in1, OUTPUT);
   pinMode(in2, OUTPUT);
   pinMode(in3, OUTPUT);
   pinMode(in4, OUTPUT);
 
   digitalWrite(in1, LOW);
   digitalWrite(in2, HIGH);
-
 }
 
 void loop() {
   //millis
   unsigned long currentMillis = millis();
 
-  //infared data 
-  if(currentMillis - irMillis >= 500){
+  //infared data
+  if (currentMillis - irMillis >= 500) {
     irMillis = currentMillis;
     readIR();
   }
@@ -144,10 +144,9 @@ void loop() {
   // Serial.print(" ");
 
   // Serial.println("");
-
 }
 
-void readIR(){
+void readIR() {
   int ir1State = digitalRead(ir1);
   int ir2State = digitalRead(ir2);
   int ir3State = digitalRead(ir3);
@@ -161,21 +160,18 @@ void readIR(){
   Serial.print(" ");
   Serial.print(ir4State);
   Serial.println(" ");
-
 }
 
-int ultrasonicDistance(){
+int ultrasonicDistance() {
   digitalWrite(trigPin, LOW);
   digitalWrite(trigPin, HIGH);
   digitalWrite(trigPin, LOW);
 
   long duration = pulseIn(echoPin, HIGH);
 
-  int distance = duration * 0.034/2;
+  int distance = duration * 0.034 / 2;
 
-  if(distance < 50){ //check for unreliable values
+  if (distance < 50) {  //check for unreliable values
     return distance;
   }
-  
 }
-
