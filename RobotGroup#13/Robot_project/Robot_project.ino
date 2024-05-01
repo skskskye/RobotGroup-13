@@ -4,12 +4,13 @@
 
 //timings
 unsigned long irMillis = 0;
+unsigned long motorMillis = 0;
 
 //motor driver pins
-#define in1 3
+#define in1 9
 #define in2 5
 #define in3 6
-#define in4 9
+#define in4 3
 
 //colour sensor pins
 #define out A5
@@ -99,22 +100,13 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);
-  digitalWrite(in3, LOW);
-  digitalWrite(in4, HIGH);
+  forward();
 
-  // Delay for a few seconds
-  delay(5000);
 
-  // Stop the motors
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, LOW);
-  digitalWrite(in3, LOW);
-  digitalWrite(in4, LOW);
 
-  // Delay for a few seconds
-  delay(5000);
+
+
+
 
   //millis
   unsigned long currentMillis = millis();
