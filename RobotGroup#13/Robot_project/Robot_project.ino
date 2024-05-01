@@ -6,10 +6,10 @@
 unsigned long irMillis = 0;
 
 //motor driver pins
-const int in1 = 3;
-const int in2 = 5;
-const int in3 = 6;
-const int in4 = 9;
+#define in1 3
+#define in2 5
+#define in3 6
+#define in4 9
 
 //colour sensor pins
 #define out A5
@@ -96,82 +96,32 @@ void setup() {
   pinMode(in2, OUTPUT);
   pinMode(in3, OUTPUT);
   pinMode(in4, OUTPUT);
-
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);
 }
 
 void loop() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
+
+  // Delay for a few seconds
+  delay(5000);
+
+  // Stop the motors
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);
+
+  // Delay for a few seconds
+  delay(5000);
+
   //millis
   unsigned long currentMillis = millis();
 
   //infared data
   if (currentMillis - irMillis >= 500) {
     irMillis = currentMillis;
-    readIR();
-  }
-
-
-
-  //color sensor data
-
-  //for red
-
-  // digitalWrite(S2, LOW);
-  // digitalWrite(S3, LOW);
-
-  // int redFreq = pulseIn(out, LOW);
-
-  // Serial.print(redFreq);
-  // Serial.print(" ");
-
-  // //for green
-  // digitalWrite(S2, HIGH);
-  // digitalWrite(S3, HIGH);
-
-  // int greenFreq = pulseIn(out, LOW);
-
-  // Serial.print(greenFreq);
-  // Serial.print(" ");
-
-  // //for blue
-  // digitalWrite(S2, LOW);
-  // digitalWrite(S3, HIGH);
-
-  // int blueFreq = pulseIn(out, LOW);
-
-  // Serial.print(blueFreq);
-  // Serial.print(" ");
-
-  // Serial.println("");
-}
-
-void readIR() {
-  int ir1State = digitalRead(ir1);
-  int ir2State = digitalRead(ir2);
-  int ir3State = digitalRead(ir3);
-  int ir4State = digitalRead(ir4);
-
-  Serial.print(ir1State);
-  Serial.print(" ");
-  Serial.print(ir2State);
-  Serial.print(" ");
-  Serial.print(ir3State);
-  Serial.print(" ");
-  Serial.print(ir4State);
-  Serial.println(" ");
-}
-
-int ultrasonicDistance() {
-  digitalWrite(trigPin, LOW);
-  digitalWrite(trigPin, HIGH);
-  digitalWrite(trigPin, LOW);
-
-  long duration = pulseIn(echoPin, HIGH);
-
-  int distance = duration * 0.034 / 2;
-
-  if (distance < 50) {  //check for unreliable values
-    return distance;
+    readInfrared();
   }
 }
