@@ -1,15 +1,9 @@
-void readInfrared() {
-  int ir1State = digitalRead(ir1);
-  int ir2State = digitalRead(ir2);
-  int ir3State = digitalRead(ir3);
-  int ir4State = digitalRead(ir4);
+int* readInfrared() {
+  static int arr[3];
 
-  Serial.print(ir1State);
-  Serial.print(" ");
-  Serial.print(ir2State);
-  Serial.print(" ");
-  Serial.print(ir3State);
-  Serial.print(" ");
-  Serial.print(ir4State);
-  Serial.println(" ");
+  arr[0] = digitalRead(ir1);
+  arr[1] = digitalRead(ir2);
+  arr[2] = digitalRead(ir3);
+  arr[3] = digitalRead(ir4);
+  return arr;
 }

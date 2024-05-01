@@ -100,20 +100,14 @@ void setup() {
 }
 
 void loop() {
-  forward();
-
-
-
-
-
-
-
   //millis
   unsigned long currentMillis = millis();
 
   //infared data
   if (currentMillis - irMillis >= 500) {
     irMillis = currentMillis;
-    readInfrared();
+    if(readInfrared[0] == 1, readInfrared[1] == 1, readInfrared[2] == 1, readInfrared[3] == 0){
+      forward();
+    }
   }
 }
