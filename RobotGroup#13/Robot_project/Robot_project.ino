@@ -102,12 +102,35 @@ void setup() {
 void loop() {
   //millis
   unsigned long currentMillis = millis();
+  int* valueArray = readInfrared();
 
   //infared data
-  if (currentMillis - irMillis >= 500) {
+  if (currentMillis - irMillis >= 50) {
     irMillis = currentMillis;
-    if(readInfrared[0] == 1, readInfrared[1] == 1, readInfrared[2] == 1, readInfrared[3] == 0){
-      forward();
+    if(valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0){
+      adjustableSpeed(200, 200);
+    }else if(valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0){
+      adjustableSpeed(200, 165);
+      Serial.println("adjust 1");
+    }else if(valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0){
+      adjustableSpeed(165, 200);
+      Serial.println("adjust 2");
+    }else{
+      stop();
     }
   }
+
+
+
+
+
+  // Serial.print(valueArray[0]);
+  // Serial.print(" ");
+  // Serial.print(valueArray[1]);
+  // Serial.print(" ");
+  // Serial.print(valueArray[2]);
+  // Serial.print(" ");
+  // Serial.print(valueArray[3]);
+  // Serial.println(" ");
+  
 }

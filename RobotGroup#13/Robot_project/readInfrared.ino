@@ -1,5 +1,5 @@
 int* readInfrared() {
-  static int arr[3];
+  static int arr[4];
 
   arr[0] = digitalRead(ir1);
   arr[1] = digitalRead(ir2);
