@@ -2,9 +2,16 @@
 #include <WiFiNINA.h>
 #include <utility/wifi_drv.h>
 
+//bools
+bool isTurningRight = false;
+bool isTurningLeft = false;
+bool isTurningAround = false;
+
 //timings
 unsigned long irMillis = 0;
 unsigned long motorMillis = 0;
+unsigned long ultrasonicMillis = 0;
+
 
 //motor driver pins
 #define in1 9
@@ -103,23 +110,53 @@ void loop() {
   //millis
   unsigned long currentMillis = millis();
   int* valueArray = readInfrared();
-
-  //infared data
-  if (currentMillis - irMillis >= 50) {
-    irMillis = currentMillis;
-    if(valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0){
-      adjustableSpeed(200, 200);
-    }else if(valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0){
-      adjustableSpeed(200, 165);
-      Serial.println("adjust 1");
-    }else if(valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0){
-      adjustableSpeed(165, 200);
-      Serial.println("adjust 2");
-    }else{
-      stop();
+  if(currentMillis - ultrasonicMillis >= 100){
+    ultrasonicMillis = currentMillis;                               
+    if (ultrasonicDist() <= 15 || isTurningAround == true) {
+      isTurningAround = true;
+      turnAround();
+      if (currentMillis - motorMillis >= 1000) {
+        motorMillis = currentMillis;
+        isTurningAround = false;
+      }
     }
   }
 
+  
+
+
+  //turn sequence
+  if (isTurningAround == false) {
+    if ((valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) || isTurningLeft == true) {
+      isTurningLeft = true;
+      adjustableSpeed(-255, 255);
+      if (currentMillis - motorMillis >= 500) {
+        motorMillis = currentMillis;
+        isTurningLeft = false;
+      }
+    } else if ((valueArray[0] == 1 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) || isTurningRight == true) {
+      isTurningRight = true;
+      adjustableSpeed(255, -255);
+      if (currentMillis - motorMillis >= 500) {
+        motorMillis = currentMillis;
+        isTurningRight = false;
+      }
+    }
+
+    //infared data
+    if (currentMillis - irMillis >= 5 && isTurningLeft == false && isTurningRight == false) {
+      irMillis = currentMillis;
+      if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) {
+        adjustableSpeed(200, 200);
+      } else if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0) {
+        adjustableSpeed(200, 140);
+        Serial.println("adjust 1");
+      } else if (valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0) {
+        adjustableSpeed(140, 200);
+        Serial.println("adjust 2");
+      }
+    }
+  }
 
 
 
@@ -132,5 +169,4 @@ void loop() {
   // Serial.print(" ");
   // Serial.print(valueArray[3]);
   // Serial.println(" ");
-  
 }

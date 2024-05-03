@@ -1,6 +1,8 @@
 int ultrasonicDist() {
   digitalWrite(trigPin, LOW);
+  delayMicroseconds(10);
   digitalWrite(trigPin, HIGH);
+  delayMicroseconds(1);
   digitalWrite(trigPin, LOW);
 
   long duration = pulseIn(echoPin, HIGH);

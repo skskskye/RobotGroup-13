@@ -6,6 +6,13 @@ void forward(){
   Serial.println("move");
 }
 
+void turnAround(){
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
+}
+
 void backward(){
   digitalWrite(in1, HIGH);
   digitalWrite(in2, LOW);
