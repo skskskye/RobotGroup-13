@@ -6,11 +6,14 @@
 bool isTurningRight = false;
 bool isTurningLeft = false;
 bool isTurningAround = false;
+bool isMovingTurn = false;
 
 //timings
 unsigned long irMillis = 0;
 unsigned long motorMillis = 0;
 unsigned long ultrasonicMillis = 0;
+unsigned long turnTime = 0;
+unsigned long moveTime = 0;
 
 
 //motor driver pins
@@ -110,49 +113,84 @@ void loop() {
   //millis
   unsigned long currentMillis = millis();
   int* valueArray = readInfrared();
-  if(currentMillis - ultrasonicMillis >= 100){
-    ultrasonicMillis = currentMillis;                               
-    if (ultrasonicDist() <= 15 || isTurningAround == true) {
-      isTurningAround = true;
-      turnAround();
-      if (currentMillis - motorMillis >= 1000) {
-        motorMillis = currentMillis;
-        isTurningAround = false;
+  if (currentMillis - ultrasonicMillis >= 50) {
+    ultrasonicMillis = currentMillis;
+    Serial.println("time!");
+    if (ultrasonicDist() <= 7 || isTurningAround == true) {
+      Serial.println(ultrasonicDist());
+      Serial.println(isTurningAround);
+      if (isTurningAround) {
+        if (currentMillis - turnTime >= 50) {
+          if (valueArray[1] == 1 || valueArray[2] == 1) {
+            isTurningAround = false;
+            stop();
+          }
+        }
+      } else {
+        turnAround();
+        isTurningAround = true;
+        turnTime = currentMillis;
       }
     }
   }
 
-  
+
+
 
 
   //turn sequence
   if (isTurningAround == false) {
     if ((valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) || isTurningLeft == true) {
-      isTurningLeft = true;
-      adjustableSpeed(-255, 255);
+       isTurningLeft = true;
+      
+      if(currentMillis - moveTime >= 350){
+        moveTime = currentMillis;
+        isMovingTurn = true;
+      }else{
+        adjustableSpeed(255, 255, "straight");
+      }
+
+      if(isMovingTurn){
+        adjustableSpeed(255, 255, "left");
+      }
+
       if (currentMillis - motorMillis >= 500) {
         motorMillis = currentMillis;
         isTurningLeft = false;
+        isMovingTurn = false;
       }
+
     } else if ((valueArray[0] == 1 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) || isTurningRight == true) {
       isTurningRight = true;
-      adjustableSpeed(255, -255);
+      
+      if(currentMillis - moveTime >= 200){
+        moveTime = currentMillis;
+        isMovingTurn = true;
+      }else{
+        adjustableSpeed(200, 200, "straight");
+      }
+
+      if(isMovingTurn){
+        adjustableSpeed(255, 255, "right");
+      }
+
       if (currentMillis - motorMillis >= 500) {
         motorMillis = currentMillis;
         isTurningRight = false;
+        isMovingTurn = false;
       }
     }
 
     //infared data
-    if (currentMillis - irMillis >= 5 && isTurningLeft == false && isTurningRight == false) {
+    if (currentMillis - irMillis >= 1 && isTurningLeft == false && isTurningRight == false) {
       irMillis = currentMillis;
       if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) {
-        adjustableSpeed(200, 200);
+        adjustableSpeed(200, 200, "straight");
       } else if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0) {
-        adjustableSpeed(200, 140);
+        adjustableSpeed(200, 140, "straight");
         Serial.println("adjust 1");
       } else if (valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0) {
-        adjustableSpeed(140, 200);
+        adjustableSpeed(140, 200, "straight");
         Serial.println("adjust 2");
       }
     }
