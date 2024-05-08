@@ -113,92 +113,92 @@ void loop() {
   //millis
   unsigned long currentMillis = millis();
   int* valueArray = readInfrared();
-  // if (currentMillis - ultrasonicMillis >= 50) {
-  //   ultrasonicMillis = currentMillis;
-  //   Serial.println("time!");
-  //   if (ultrasonicDist() <= 7 || isTurningAround == true) {
-  //     Serial.println(ultrasonicDist());
-  //     Serial.println(isTurningAround);
-  //     if (isTurningAround) {
-  //       if (currentMillis - turnTime >= 50) {
-  //         if (valueArray[1] == 1 || valueArray[2] == 1) {
-  //           isTurningAround = false;
-  //           stop();
-  //         }
-  //       }
-  //     } else {
-  //       turnAround();
-  //       isTurningAround = true;
-  //       turnTime = currentMillis;
-  //     }
-  //   }
-  // }
+  if (currentMillis - ultrasonicMillis >= 50) {
+    ultrasonicMillis = currentMillis;
+    Serial.println("time!");
+    if (ultrasonicDist() <= 7 || isTurningAround == true) {
+      Serial.println(ultrasonicDist());
+      Serial.println(isTurningAround);
+      if (isTurningAround) {
+        if (currentMillis - turnTime >= 50) {
+          if (valueArray[1] == 1 || valueArray[2] == 1) {
+            isTurningAround = false;
+            stop();
+          }
+        }
+      } else {
+        turnAround();
+        isTurningAround = true;
+        turnTime = currentMillis;
+      }
+    }
+  }
 
 
 
 
 
-  //turn sequence
-  // if (isTurningAround == false) {
-  //   if ((valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) || isTurningLeft == true) {
-  //     isTurningLeft = true;
+  turn sequence
+  if (isTurningAround == false) {
+    if ((valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) || isTurningLeft == true) {
+      isTurningLeft = true;
 
-  //     if(!isMovingTurn){
-  //       adjustableSpeed(255, 255, "straight");
-  //       delay(400);
-  //     }
+      if(!isMovingTurn){
+        adjustableSpeed(255, 255, "straight");
+        delay(400);
+      }
       
 
-  //     isMovingTurn = true;
+      isMovingTurn = true;
 
-  //     valueArray = readInfrared();
-  //     if (valueArray[1] == 1 || valueArray[2] == 1) {
-  //       adjustableSpeed(255, 255, "right");
-  //       delay(50);
-  //       isTurningLeft = false;
-  //       isMovingTurn = false;
-  //     }else if(isMovingTurn){
-  //       adjustableSpeed(155, 155, "left");
-  //     }
+      valueArray = readInfrared();
+      if (valueArray[1] == 1 || valueArray[2] == 1) {
+        adjustableSpeed(255, 255, "right");
+        delay(50);
+        isTurningLeft = false;
+        isMovingTurn = false;
+      }else if(isMovingTurn){
+        adjustableSpeed(155, 155, "left");
+      }
 
-  //   } else if ((valueArray[0] == 1 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) || isTurningRight == true) {
-  //     isTurningRight = true;
+    } else if ((valueArray[0] == 1 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) || isTurningRight == true) {
+      isTurningRight = true;
 
-  //     if(!isMovingTurn){
-  //       adjustableSpeed(255, 255, "straight");
-  //       delay(350);
-  //     }
+      if(!isMovingTurn){
+        adjustableSpeed(255, 255, "straight");
+        delay(350);
+      }
       
 
-  //     isMovingTurn = true;
+      isMovingTurn = true;
 
-  //     valueArray = readInfrared();
-  //     if (valueArray[1] == 1 || valueArray[2] == 1) {
-  //       adjustableSpeed(255, 255, "left");
-  //       delay(50);
-  //       isTurningRight = false;
-  //       isMovingTurn = false;
-  //     }else if(isMovingTurn){
-  //       adjustableSpeed(155, 155, "right");
-  //     }
-  //   }
+      valueArray = readInfrared();
+      if (valueArray[1] == 1 || valueArray[2] == 1) {
+        adjustableSpeed(255, 255, "left");
+        delay(50);
+        isTurningRight = false;
+        isMovingTurn = false;
+      }else if(isMovingTurn){
+        adjustableSpeed(155, 155, "right");
+      }
+    }
 
-  //   //infared data
-  //   if (currentMillis - irMillis >= 1 && isTurningLeft == false && isTurningRight == false) {
-  //     irMillis = currentMillis;
-  //     if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) {
-  //       adjustableSpeed(200, 200, "straight");
-  //     } else if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0) {
-  //       adjustableSpeed(200, 140, "straight");
-  //       Serial.println("adjust 1");
-  //     } else if (valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0) {
-  //       adjustableSpeed(140, 200, "straight");
-  //       Serial.println("adjust 2");
-  //     }
-  //   }
-  // }
+    //infared data
+    if (currentMillis - irMillis >= 1 && isTurningLeft == false && isTurningRight == false) {
+      irMillis = currentMillis;
+      if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) {
+        adjustableSpeed(200, 200, "straight");
+      } else if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0) {
+        adjustableSpeed(200, 140, "straight");
+        Serial.println("adjust 1");
+      } else if (valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0) {
+        adjustableSpeed(140, 200, "straight");
+        Serial.println("adjust 2");
+      }
+    }
+  }
 
-  adjustableSpeed(255, 255, "right");
+  // adjustableSpeed(255, 255, "right"); debug
 
 
 
