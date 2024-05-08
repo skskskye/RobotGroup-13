@@ -138,7 +138,7 @@ void loop() {
 
 
 
-  turn sequence
+  //turn sequence
   if (isTurningAround == false) {
     if ((valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) || isTurningLeft == true) {
       isTurningLeft = true;
@@ -148,7 +148,7 @@ void loop() {
         delay(400);
       }
       
-
+  
       isMovingTurn = true;
 
       valueArray = readInfrared();
