@@ -20,23 +20,14 @@ void backward(){
   digitalWrite(in4, LOW);
 }
 
-void adjustableSpeed(int speed1, int speed2, String dir){
-  if(dir == "left"){
-    analogWrite(in1, speed1);
-    analogWrite(in2, LOW);
-    analogWrite(in3, LOW);
-    analogWrite(in4, speed2);
-  }else if(dir == "right"){
-    analogWrite(in1, LOW);
-    analogWrite(in2, speed1);
-    analogWrite(in3, speed2);
-    analogWrite(in4, LOW);
-  }else if(dir == "straight"){
-    analogWrite(in1, LOW);
-    analogWrite(in2, speed1);
-    analogWrite(in3, LOW);
-    analogWrite(in4, speed2);
-  }
+void adjustableSpeed(int speed1, int speed2){
+  
+  speed1 = max(-255, min(255, speed1));
+  speed2 = max(-255, min(255, speed2));
+  analogWrite(in1, speed1 > 0 ? speed1 : 0);
+  analogWrite(in2, speed1 < 0 ? -speed1 : 0);
+  analogWrite(in3, speed2 > 0 ? speed2 : 0);
+  analogWrite(in4, speed2 < 0 ? -speed2 : 0);
 }
 
 
