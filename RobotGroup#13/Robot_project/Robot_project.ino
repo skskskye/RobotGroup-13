@@ -7,6 +7,7 @@ bool isTurningRight = false;
 bool isTurningLeft = false;
 bool isTurningAround = false;
 bool isMovingTurn = false;
+bool adjustTurn = false;
 
 //timings
 unsigned long irMillis = 0;
@@ -18,8 +19,8 @@ unsigned long moveTime = 0;
 
 //motor driver pins
 #define in1 5
-#define in2 9
-#define in3 3
+#define in2 3
+#define in3 9
 #define in4 6
 
 //colour sensor pins
@@ -140,12 +141,13 @@ void loop() {
 
   //turn sequence
   if (isTurningAround == false) {
-    if ((valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) || isTurningLeft == true) {
+    if ((valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) || isTurningLeft == true && isTurningRight == false) {
       isTurningLeft = true;
+      
 
       if(!isMovingTurn){
         adjustableSpeed(255, 255);
-        delay(400);
+        delay(250);
       }
       
   
@@ -154,19 +156,24 @@ void loop() {
       valueArray = readInfrared();
       if (valueArray[1] == 1 || valueArray[2] == 1) {
         adjustableSpeed(255, -255);
-        delay(50);
-        isTurningLeft = false;
+        delay(40);
+        stop();
+        delay(250);
         isMovingTurn = false;
+        isTurningLeft = false;
+        adjustTurn = true;
       }else if(isMovingTurn){
         adjustableSpeed(-155, 155);
       }
 
-    } else if ((valueArray[0] == 1 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) || isTurningRight == true) {
+      
+
+    } else if ((valueArray[0] == 1 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) || isTurningRight == true && isTurningLeft == false) {
       isTurningRight = true;
 
       if(!isMovingTurn){
         adjustableSpeed(255, 255);
-        delay(350);
+        delay(250);
       }
       
 
@@ -175,7 +182,9 @@ void loop() {
       valueArray = readInfrared();
       if (valueArray[1] == 1 || valueArray[2] == 1) {
         adjustableSpeed(-255, 255);
-        delay(50);
+        delay(40);
+        stop();
+        delay(250);
         isTurningRight = false;
         isMovingTurn = false;
       }else if(isMovingTurn){
@@ -184,7 +193,7 @@ void loop() {
     }
 
     //infared data
-    if (currentMillis - irMillis >= 1 && isTurningLeft == false && isTurningRight == false) {
+    if (currentMillis - irMillis >= 2) {
       irMillis = currentMillis;
       if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) {
         adjustableSpeed(200, 200);
@@ -198,7 +207,7 @@ void loop() {
     }
   }
 
-  // adjustableSpeed(255, 255);
+
 
 
 
