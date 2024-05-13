@@ -8,6 +8,7 @@ bool isTurningLeft = false;
 bool isTurningAround = false;
 bool isMovingTurn = false;
 bool adjustTurn = false;
+bool allSensorsOff = false;
 
 //timings
 unsigned long irMillis = 0;
@@ -111,29 +112,46 @@ void setup() {
 }
 
 void loop() {
+  
+
   //millis
   unsigned long currentMillis = millis();
   int* valueArray = readInfrared();
-  // if (currentMillis - ultrasonicMillis >= 50) {
-  //   ultrasonicMillis = currentMillis;
-  //   Serial.println("time!");
-  //   if (ultrasonicDist() <= 7 || isTurningAround == true) {
-  //     Serial.println(ultrasonicDist());
-  //     Serial.println(isTurningAround);
-  //     if (isTurningAround) {
-  //       if (currentMillis - turnTime >= 50) {
-  //         if (valueArray[1] == 1 || valueArray[2] == 1) {
-  //           isTurningAround = false;
-  //           stop();
-  //         }
-  //       }
-  //     } else {
-  //       turnAround();
-  //       isTurningAround = true;
-  //       turnTime = currentMillis;
-  //     }
-  //   }
-  // }
+
+  if (currentMillis - ultrasonicMillis >= 100) {
+    ultrasonicMillis = currentMillis;
+    //Serial.println("time!");
+    if (ultrasonicDist() <= 10 && isTurningAround == false) {
+      Serial.println("wall detected");
+      isTurningAround = true;
+    }
+  }
+
+  if(isTurningAround){
+    if(allSensorsOff == true){
+      if(valueArray[1] == 1|| valueArray[2] == 1){
+        adjustableSpeed(-255, 255);
+        delay(40);
+        stop();
+        delay(1000);
+        Serial.println("turn is done");
+        isTurningAround = false;
+      }else{
+        adjustableSpeed(150, -150);
+      }
+    }else{
+      adjustableSpeed(150, -150);
+    }
+
+    if(valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 0 && valueArray[3] == 0 && isTurningAround == true){
+      Serial.println("all sensors are off");
+      allSensorsOff = true;
+    }
+  }
+
+  
+
+ 
 
 
 
@@ -141,16 +159,18 @@ void loop() {
 
   //turn sequence
   if (isTurningAround == false) {
+    allSensorsOff = false;
+    isTurningAround = false;
     if ((valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) || isTurningLeft == true && isTurningRight == false) {
       isTurningLeft = true;
-      
 
-      if(!isMovingTurn){
+
+      if (!isMovingTurn) {
         adjustableSpeed(255, 255);
         delay(250);
       }
-      
-  
+
+
       isMovingTurn = true;
 
       valueArray = readInfrared();
@@ -162,20 +182,20 @@ void loop() {
         isMovingTurn = false;
         isTurningLeft = false;
         adjustTurn = true;
-      }else if(isMovingTurn){
+      } else if (isMovingTurn) {
         adjustableSpeed(-155, 155);
       }
 
-      
+
 
     } else if ((valueArray[0] == 1 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) || isTurningRight == true && isTurningLeft == false) {
       isTurningRight = true;
 
-      if(!isMovingTurn){
+      if (!isMovingTurn) {
         adjustableSpeed(255, 255);
         delay(250);
       }
-      
+
 
       isMovingTurn = true;
 
@@ -187,7 +207,7 @@ void loop() {
         delay(250);
         isTurningRight = false;
         isMovingTurn = false;
-      }else if(isMovingTurn){
+      } else if (isMovingTurn) {
         adjustableSpeed(155, -155);
       }
     }
@@ -199,10 +219,10 @@ void loop() {
         adjustableSpeed(200, 200);
       } else if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0) {
         adjustableSpeed(200, 140);
-        Serial.println("adjust 1");
+        //Serial.println("adjust 1");
       } else if (valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0) {
         adjustableSpeed(140, 200);
-        Serial.println("adjust 2");
+        //Serial.println("adjust 2");
       }
     }
   }
