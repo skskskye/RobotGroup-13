@@ -8,7 +8,7 @@ bool isTurningLeft = false;
 bool isTurningAround = false;
 bool isMovingTurn = false;
 bool adjustTurn = false;
-bool allSensorsOff = false;
+bool beginTurnAroundFinish = false;
 
 //timings
 unsigned long irMillis = 0;
@@ -112,13 +112,13 @@ void setup() {
 }
 
 void loop() {
-  
+
 
   //millis
   unsigned long currentMillis = millis();
   int* valueArray = readInfrared();
 
-  if (currentMillis - ultrasonicMillis >= 100) {
+  if (currentMillis - ultrasonicMillis >= 20) {
     ultrasonicMillis = currentMillis;
     //Serial.println("time!");
     if (ultrasonicDist() <= 10 && isTurningAround == false) {
@@ -127,31 +127,39 @@ void loop() {
     }
   }
 
-  if(isTurningAround){
-    if(allSensorsOff == true){
-      if(valueArray[1] == 1|| valueArray[2] == 1){
+  if (isTurningAround) {
+    if(currentMillis - turnTime >= 650){
+      beginTurnAroundFinish = true;
+      WiFiDrv::analogWrite(redLED, 255);
+    WiFiDrv::analogWrite(greenLED, 0);
+    WiFiDrv::analogWrite(blueLED, 0);
+    }
+
+
+    if (beginTurnAroundFinish) {
+      if (valueArray[1] == 1 || valueArray[2] == 1) {
         adjustableSpeed(-255, 255);
-        delay(40);
+        delay(25);
         stop();
         delay(1000);
         Serial.println("turn is done");
         isTurningAround = false;
-      }else{
+        beginTurnAroundFinish = false;
+      } else {
         adjustableSpeed(150, -150);
       }
-    }else{
+    } else {
       adjustableSpeed(150, -150);
     }
 
-    if(valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 0 && valueArray[3] == 0 && isTurningAround == true){
-      Serial.println("all sensors are off");
-      allSensorsOff = true;
-    }
+    
+  }else{
+    currentMillis = turnTime;
   }
 
-  
 
- 
+
+
 
 
 
@@ -159,8 +167,6 @@ void loop() {
 
   //turn sequence
   if (isTurningAround == false) {
-    allSensorsOff = false;
-    isTurningAround = false;
     if ((valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) || isTurningLeft == true && isTurningRight == false) {
       isTurningLeft = true;
 
