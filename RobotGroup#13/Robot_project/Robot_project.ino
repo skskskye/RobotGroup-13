@@ -2,6 +2,8 @@
 #include <WiFiNINA.h>
 #include <utility/wifi_drv.h>
 
+String lastTurn = "";
+
 //bools
 bool isTurningRight = false;
 bool isTurningLeft = false;
@@ -124,22 +126,22 @@ void loop() {
     if (ultrasonicDist() <= 10 && isTurningAround == false) {
       Serial.println("wall detected");
       isTurningAround = true;
+      turnTime = currentMillis;
     }
   }
-
   if (isTurningAround) {
-    if(currentMillis - turnTime >= 650){
+    if (currentMillis - turnTime >= 400) {
       beginTurnAroundFinish = true;
       WiFiDrv::analogWrite(redLED, 255);
-    WiFiDrv::analogWrite(greenLED, 0);
-    WiFiDrv::analogWrite(blueLED, 0);
+      WiFiDrv::analogWrite(greenLED, 0);
+      WiFiDrv::analogWrite(blueLED, 0);
     }
 
-
     if (beginTurnAroundFinish) {
+      Serial.println("finished intital turn");
       if (valueArray[1] == 1 || valueArray[2] == 1) {
         adjustableSpeed(-255, 255);
-        delay(25);
+        delay(50);
         stop();
         delay(1000);
         Serial.println("turn is done");
@@ -149,12 +151,9 @@ void loop() {
         adjustableSpeed(150, -150);
       }
     } else {
+      Serial.println("not finished intital turn");
       adjustableSpeed(150, -150);
     }
-
-    
-  }else{
-    currentMillis = turnTime;
   }
 
 
@@ -167,60 +166,90 @@ void loop() {
 
   //turn sequence
   if (isTurningAround == false) {
-    if ((valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) || isTurningLeft == true && isTurningRight == false) {
-      isTurningLeft = true;
-
-
-      if (!isMovingTurn) {
-        adjustableSpeed(255, 255);
-        delay(250);
-      }
-
-
-      isMovingTurn = true;
-
-      valueArray = readInfrared();
-      if (valueArray[1] == 1 || valueArray[2] == 1) {
-        adjustableSpeed(255, -255);
-        delay(40);
-        stop();
-        delay(250);
-        isMovingTurn = false;
-        isTurningLeft = false;
-        adjustTurn = true;
-      } else if (isMovingTurn) {
-        adjustableSpeed(-155, 155);
-      }
-
-
-
-    } else if ((valueArray[0] == 1 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) || isTurningRight == true && isTurningLeft == false) {
-      isTurningRight = true;
-
-      if (!isMovingTurn) {
-        adjustableSpeed(255, 255);
-        delay(250);
-      }
-
-
-      isMovingTurn = true;
-
-      valueArray = readInfrared();
-      if (valueArray[1] == 1 || valueArray[2] == 1) {
-        adjustableSpeed(-255, 255);
-        delay(40);
-        stop();
-        delay(250);
-        isTurningRight = false;
-        isMovingTurn = false;
-      } else if (isMovingTurn) {
-        adjustableSpeed(155, -155);
-      }
-    }
-
-    //infared data
-    if (currentMillis - irMillis >= 2) {
+    if (currentMillis - irMillis >= 10 || isTurningLeft == true || isTurningRight == true) {
       irMillis = currentMillis;
+      if (valueArray[0] == 1 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) {
+        if(lastTurn == "right"){
+          isTurningRight = false;
+          isTurningLeft = true;
+        }else{
+          isTurningRight = true;
+          isTurningLeft = false;
+        }
+      }
+      if ((valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) || isTurningLeft == true && isTurningRight == false) {
+        isTurningLeft = true;
+        lastTurn = "left";
+
+
+
+        if (!isMovingTurn) {
+          adjustableSpeed(255, 255);
+          delay(250);
+          turnTime = currentMillis;
+        }
+
+        if (currentMillis - turnTime >= 1000) {
+          beginTurnAroundFinish = true;
+        }
+
+        isMovingTurn = true;
+
+        valueArray = readInfrared();
+        if (beginTurnAroundFinish) {
+          if (valueArray[1] == 1 || valueArray[2] == 1) {
+            adjustableSpeed(255, -255);
+            delay(40);
+            stop();
+            delay(250);
+            isMovingTurn = false;
+            isTurningLeft = false;
+            beginTurnAroundFinish = false;
+          } else if (isMovingTurn) {
+            adjustableSpeed(-150, 150);
+          }
+        } else {
+          adjustableSpeed(-150, 150);
+        }
+
+
+
+      } else if ((valueArray[0] == 1 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) || isTurningRight == true && isTurningLeft == false) {
+        isTurningRight = true;
+        lastTurn = "right";
+        if (!isMovingTurn) {
+          adjustableSpeed(255, 255);
+          delay(250);
+          turnTime = currentMillis;
+        }
+
+        if (currentMillis - turnTime >= 1000) {
+          beginTurnAroundFinish = true;
+        }
+
+
+        isMovingTurn = true;
+
+        valueArray = readInfrared();
+        if (beginTurnAroundFinish) {
+          if (valueArray[1] == 1 || valueArray[2] == 1) {
+            adjustableSpeed(-255, 255);
+            delay(50);
+            stop();
+            delay(250);
+            isTurningRight = false;
+            beginTurnAroundFinish = false;
+            isMovingTurn = false;
+          } else if (isMovingTurn) {
+            adjustableSpeed(150, -150);
+          }
+        } else {
+          adjustableSpeed(150, -150);
+        }
+      }
+
+
+      //infared data
       if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) {
         adjustableSpeed(200, 200);
       } else if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0) {
