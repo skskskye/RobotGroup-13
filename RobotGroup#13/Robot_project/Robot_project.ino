@@ -5,6 +5,7 @@
 String lastTurn = "";
 
 //bools
+bool blacklineDetected = false;
 bool isTurningRight = false;
 bool isTurningLeft = false;
 bool isTurningAround = false;
@@ -18,7 +19,11 @@ unsigned long motorMillis = 0;
 unsigned long ultrasonicMillis = 0;
 unsigned long turnTime = 0;
 unsigned long moveTime = 0;
+unsigned long firstDetectionTime1 = 0;
+unsigned long firstDetectionTime4 = 0;
 
+//constant
+unsigned long sensorCheckThreshold = 50;
 
 //motor driver pins
 #define in1 5
@@ -65,18 +70,18 @@ void setup() {
 
 
   //connect to internet
-  while (!Serial)
-    ;
+  // while (!Serial)
+  //   ;
 
-  Serial.println("attempting to connect");
+  // Serial.println("attempting to connect");
 
-  while (WiFi.begin(ssid, password) != WL_CONNECTED) {
-    WiFiDrv::analogWrite(redLED, 255);
-    WiFiDrv::analogWrite(greenLED, 0);
-    WiFiDrv::analogWrite(blueLED, 0);
-    Serial.print(".");
-    delay(5000);
-  }
+  // while (WiFi.begin(ssid, password) != WL_CONNECTED) {
+  //   WiFiDrv::analogWrite(redLED, 255);
+  //   WiFiDrv::analogWrite(greenLED, 0);
+  //   WiFiDrv::analogWrite(blueLED, 0);
+  //   Serial.print(".");
+  //   delay(5000);
+  // }
 
   //once connected change led c olour
   Serial.println("CONNECTED!");
@@ -120,38 +125,37 @@ void loop() {
   unsigned long currentMillis = millis();
   int* valueArray = readInfrared();
 
+
+  //turn around logic for wall detction
   if (currentMillis - ultrasonicMillis >= 20) {
     ultrasonicMillis = currentMillis;
     //Serial.println("time!");
     if (ultrasonicDist() <= 10 && isTurningAround == false) {
-      Serial.println("wall detected");
+      // Serial.println("wall detected");
       isTurningAround = true;
       turnTime = currentMillis;
     }
   }
   if (isTurningAround) {
-    if (currentMillis - turnTime >= 400) {
+    if (currentMillis - turnTime >= 350) {
       beginTurnAroundFinish = true;
-      WiFiDrv::analogWrite(redLED, 255);
-      WiFiDrv::analogWrite(greenLED, 0);
-      WiFiDrv::analogWrite(blueLED, 0);
     }
 
     if (beginTurnAroundFinish) {
-      Serial.println("finished intital turn");
+      // Serial.println("finished intital turn");
       if (valueArray[1] == 1 || valueArray[2] == 1) {
         adjustableSpeed(-255, 255);
         delay(50);
         stop();
         delay(1000);
-        Serial.println("turn is done");
+        // Serial.println("turn is done");
         isTurningAround = false;
         beginTurnAroundFinish = false;
       } else {
         adjustableSpeed(150, -150);
       }
     } else {
-      Serial.println("not finished intital turn");
+      // Serial.println("not finished intital turn");
       adjustableSpeed(150, -150);
     }
   }
@@ -166,99 +170,154 @@ void loop() {
 
   //turn sequence
   if (isTurningAround == false) {
-    if (currentMillis - irMillis >= 10 || isTurningLeft == true || isTurningRight == true) {
-      irMillis = currentMillis;
-      if (valueArray[0] == 1 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) {
-        if(lastTurn == "right"){
-          isTurningRight = false;
-          isTurningLeft = true;
-        }else{
-          isTurningRight = true;
-          isTurningLeft = false;
-        }
+
+    if (isTurningLeft == false && isTurningRight == false && blacklineDetected == false) {
+
+      if (valueArray[0] == 1 && firstDetectionTime1 == 0) {
+        //Serial.print("sensor one detected ");
+        //Serial.println(firstDetectionTime1);
+        firstDetectionTime1 = currentMillis;
+      } else if (valueArray[3] == 1 && firstDetectionTime4 == 0) {
+        //Serial.print("sensor four detected ");
+        //Serial.println(firstDetectionTime4);
+        firstDetectionTime4 = currentMillis;
+        // Serial.println(firstDetectionTime4);
       }
-      if ((valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 1) || isTurningLeft == true && isTurningRight == false) {
-        isTurningLeft = true;
-        lastTurn = "left";
 
 
+      if (firstDetectionTime1 > 0 && currentMillis - firstDetectionTime1 < sensorCheckThreshold && firstDetectionTime4 > 0 && currentMillis - firstDetectionTime4 < sensorCheckThreshold) {
+        blacklineDetected = true;
+        isTurningLeft = false;
+        isTurningRight = false;
+        firstDetectionTime1 = 0;
+        firstDetectionTime4 = 0;
+        //Serial.println("All detected");
 
-        if (!isMovingTurn) {
-          adjustableSpeed(255, 255);
-          delay(250);
-          turnTime = currentMillis;
-        }
-
-        if (currentMillis - turnTime >= 1000) {
-          beginTurnAroundFinish = true;
-        }
-
-        isMovingTurn = true;
-
-        valueArray = readInfrared();
-        if (beginTurnAroundFinish) {
-          if (valueArray[1] == 1 || valueArray[2] == 1) {
-            adjustableSpeed(255, -255);
-            delay(40);
-            stop();
-            delay(250);
-            isMovingTurn = false;
-            isTurningLeft = false;
-            beginTurnAroundFinish = false;
-          } else if (isMovingTurn) {
-            adjustableSpeed(-150, 150);
-          }
-        } else {
-          adjustableSpeed(-150, 150);
-        }
-
-
-
-      } else if ((valueArray[0] == 1 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) || isTurningRight == true && isTurningLeft == false) {
+      } else if (firstDetectionTime1 > 0 && currentMillis - firstDetectionTime1 >= sensorCheckThreshold) {
+        blacklineDetected = false;
+        isTurningLeft = false;
         isTurningRight = true;
-        lastTurn = "right";
-        if (!isMovingTurn) {
-          adjustableSpeed(255, 255);
-          delay(250);
-          turnTime = currentMillis;
-        }
+        firstDetectionTime1 = 0;
+        firstDetectionTime4 = 0;
+        //Serial.println("turn left");
+      } else if (firstDetectionTime4 > 0 && currentMillis - firstDetectionTime4 >= sensorCheckThreshold) {
+        blacklineDetected = false;
+        isTurningLeft = true;
+        isTurningRight = false;
+        firstDetectionTime1 = 0;
+        firstDetectionTime4 = 0;
+        //Serial.println("turn right");
+      } else {
+        //Serial.println("no logic");
+      }
+    }
 
-        if (currentMillis - turnTime >= 1000) {
+
+    if (blacklineDetected == true) {
+      if(lastTurn == "right"){
+        isTurningRight = true;
+        isTurningLeft = false;
+      }else if(lastTurn == "left"){
+        isTurningLeft = true;
+        isTurningRight = false;
+      }
+      blacklineDetected = false;
+    }
+
+    if (isTurningLeft == true && isTurningRight == false) {
+      isTurningLeft = true;
+      lastTurn = "left";
+
+
+
+      if (!isMovingTurn) {
+        adjustableSpeed(200, 200);
+        delay(300);
+        turnTime = currentMillis;
+        isMovingTurn = true;
+      }
+
+      if (beginTurnAroundFinish == false && valueArray[1] == 1 || valueArray[2] == 1) {
+        if (currentMillis - turnTime >= 850) {
           beginTurnAroundFinish = true;
         }
+      }else{
+        beginTurnAroundFinish = true;
+      }
 
 
+
+      valueArray = readInfrared();
+      if (beginTurnAroundFinish) {
+        if (valueArray[1] == 1 || valueArray[2] == 1) {
+          adjustableSpeed(255, -255);
+          delay(40);
+          stop();
+          delay(250);
+          isMovingTurn = false;
+          isTurningLeft = false;
+          beginTurnAroundFinish = false;
+          Serial.println("finished");
+        } else if (isMovingTurn) {
+          adjustableSpeed(-150, 150);
+          Serial.println("finished intital");
+        }
+      } else {
+        adjustableSpeed(-150, 150);
+        Serial.println("doing inital");
+      }
+
+
+
+    } else if (isTurningRight == true && isTurningLeft == false) {
+      isTurningRight = true;
+      lastTurn = "right";
+      if (!isMovingTurn) {
+        adjustableSpeed(200, 200);
+        delay(300);
+        turnTime = currentMillis;
         isMovingTurn = true;
+      }
 
-        valueArray = readInfrared();
-        if (beginTurnAroundFinish) {
-          if (valueArray[1] == 1 || valueArray[2] == 1) {
-            adjustableSpeed(-255, 255);
-            delay(50);
-            stop();
-            delay(250);
-            isTurningRight = false;
-            beginTurnAroundFinish = false;
-            isMovingTurn = false;
-          } else if (isMovingTurn) {
-            adjustableSpeed(150, -150);
-          }
-        } else {
+      if (beginTurnAroundFinish == false && valueArray[1] == 1 || valueArray[2] == 1) {
+        if (currentMillis - turnTime >= 850) {
+          beginTurnAroundFinish = true;
+        }
+      }else{
+        beginTurnAroundFinish = true;
+      }
+
+
+
+
+
+
+      valueArray = readInfrared();
+      if (beginTurnAroundFinish) {
+        if (valueArray[1] == 1 || valueArray[2] == 1) {
+          adjustableSpeed(-255, 255);
+          delay(50);
+          stop();
+          delay(250);
+          isTurningRight = false;
+          beginTurnAroundFinish = false;
+          isMovingTurn = false;
+        } else if (isMovingTurn) {
           adjustableSpeed(150, -150);
         }
+      } else {
+        adjustableSpeed(150, -150);
       }
+    }
 
-
-      //infared data
-      if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) {
-        adjustableSpeed(200, 200);
-      } else if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0) {
-        adjustableSpeed(200, 140);
-        //Serial.println("adjust 1");
-      } else if (valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0) {
-        adjustableSpeed(140, 200);
-        //Serial.println("adjust 2");
-      }
+    if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) {
+      adjustableSpeed(200, 200);
+    } else if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0) {
+      adjustableSpeed(200, 130);
+      //Serial.println("adjust 1");
+    } else if (valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0) {
+      adjustableSpeed(130, 200);
+      //Serial.println("adjust 2");
     }
   }
 
