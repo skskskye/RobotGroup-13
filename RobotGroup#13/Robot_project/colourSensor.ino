@@ -1,30 +1,45 @@
-void colorSensor(){
-  //for red
+tcs3200 tcs(S0, S1, S2, S3, out);
 
-  digitalWrite(S2, LOW);
-  digitalWrite(S3, LOW);
+int avgRed = 0;
+int avgGreen = 0;
+int avgBlue = 0;
 
-  int redFreq = pulseIn(out, LOW);
+int threshhold = 2;
 
-  Serial.print(redFreq);
-  Serial.print(" ");
 
-  // //for green
-  digitalWrite(S2, HIGH);
-  digitalWrite(S3, HIGH);
+void colorSensor() {
 
-  int greenFreq = pulseIn(out, LOW);
+  const int samples = 5;
 
-  Serial.print(greenFreq);
-  Serial.print(" ");
+  long sumRed = 0;
+  long sumGreen = 0;
+  long sumBlue = 0;
+  for (int i = 0; i < samples; i++) {
+    sumRed += tcs.colorRead('r');
+    sumGreen += tcs.colorRead('g');
+    sumBlue += tcs.colorRead('b');
+  }
 
-  //for blue
-  digitalWrite(S2, LOW);
-  digitalWrite(S3, HIGH);
+  avgRed = sumRed / samples;
+  avgBlue = sumBlue / samples;
+  avgGreen = sumGreen / samples;
 
-  int blueFreq = pulseIn(out, LOW);
+  Serial.print("R = ");
+  Serial.print(avgRed);
+  Serial.print(" G = ");
+  Serial.print(avgGreen);
+  Serial.print(" B = ");
+  Serial.println(avgBlue);
 
-  Serial.print(blueFreq);
-  Serial.print(" ");
-  Serial.println("");
+  
+}
+
+String colorReading(){
+  if(avgRed > avgGreen + threshhold && avgRed > avgBlue + threshhold){
+    return "red";
+  }else if (avgGreen > avgRed + threshhold && avgGreen > avgBlue + threshhold){
+    return "green";
+  }else if(avgBlue > avgRed + threshhold && avgBlue > avgGreen + threshhold){
+    return "blue";
+  }
 }

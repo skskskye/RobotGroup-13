@@ -1,4 +1,5 @@
 //libs
+#include <tcs3200.h>
 #include <WiFiNINA.h>
 #include <utility/wifi_drv.h>
 
@@ -126,31 +127,45 @@ void loop() {
   int* valueArray = readInfrared();
 
 
+  colorSensor();
+  if (colorReading() == "red") {
+    WiFiDrv::analogWrite(redLED, 255);
+    WiFiDrv::analogWrite(greenLED, 0);
+    WiFiDrv::analogWrite(blueLED, 0);
+  } else if (colorReading() == "green") {
+    WiFiDrv::analogWrite(redLED, 0);
+    WiFiDrv::analogWrite(greenLED, 255);
+    WiFiDrv::analogWrite(blueLED, 0);
+  } else if (colorReading() == "blue") {
+    WiFiDrv::analogWrite(redLED, 0);
+    WiFiDrv::analogWrite(greenLED, 0);
+    WiFiDrv::analogWrite(blueLED, 255);
+  }
   //turn around logic for wall detction
   if (currentMillis - ultrasonicMillis >= 20) {
     ultrasonicMillis = currentMillis;
     //Serial.println("time!");
-    if (ultrasonicDist() <= 10 && isTurningAround == false) {
+    if (ultrasonicDist() <= 9 && isTurningAround == false) {
       // Serial.println("wall detected");
       isTurningAround = true;
       turnTime = currentMillis;
     }
   }
   if (isTurningAround) {
-    if (currentMillis - turnTime >= 350) {
+    if (currentMillis - turnTime >= 700) {
       beginTurnAroundFinish = true;
     }
 
     if (beginTurnAroundFinish) {
       // Serial.println("finished intital turn");
       if (valueArray[1] == 1 || valueArray[2] == 1) {
+        isTurningAround = false;
+        beginTurnAroundFinish = false;
         adjustableSpeed(-255, 255);
         delay(50);
         stop();
         delay(1000);
         // Serial.println("turn is done");
-        isTurningAround = false;
-        beginTurnAroundFinish = false;
       } else {
         adjustableSpeed(150, -150);
       }
@@ -214,10 +229,10 @@ void loop() {
 
 
     if (blacklineDetected == true) {
-      if(lastTurn == "right"){
+      if (lastTurn == "right") {
         isTurningRight = true;
         isTurningLeft = false;
-      }else if(lastTurn == "left"){
+      } else if (lastTurn == "left") {
         isTurningLeft = true;
         isTurningRight = false;
       }
@@ -241,7 +256,7 @@ void loop() {
         if (currentMillis - turnTime >= 850) {
           beginTurnAroundFinish = true;
         }
-      }else{
+      } else {
         beginTurnAroundFinish = true;
       }
 
@@ -257,14 +272,14 @@ void loop() {
           isMovingTurn = false;
           isTurningLeft = false;
           beginTurnAroundFinish = false;
-          Serial.println("finished");
+          //Serial.println("finished");
         } else if (isMovingTurn) {
           adjustableSpeed(-150, 150);
-          Serial.println("finished intital");
+          // Serial.println("finished intital");
         }
       } else {
         adjustableSpeed(-150, 150);
-        Serial.println("doing inital");
+        //Serial.println("doing inital");
       }
 
 
@@ -283,7 +298,7 @@ void loop() {
         if (currentMillis - turnTime >= 850) {
           beginTurnAroundFinish = true;
         }
-      }else{
+      } else {
         beginTurnAroundFinish = true;
       }
 
@@ -310,14 +325,16 @@ void loop() {
       }
     }
 
-    if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) {
-      adjustableSpeed(200, 200);
-    } else if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0) {
-      adjustableSpeed(200, 130);
-      //Serial.println("adjust 1");
-    } else if (valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0) {
-      adjustableSpeed(130, 200);
-      //Serial.println("adjust 2");
+    if (isTurningLeft == false && isTurningRight == false) {
+      if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) {
+        adjustableSpeed(200, 200);
+      } else if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0) {
+        adjustableSpeed(200, 130);
+        //Serial.println("adjust 1");
+      } else if (valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0) {
+        adjustableSpeed(130, 200);
+        //Serial.println("adjust 2");
+      }
     }
   }
 
