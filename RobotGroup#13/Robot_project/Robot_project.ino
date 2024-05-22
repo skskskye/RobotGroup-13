@@ -61,7 +61,7 @@ char ssid[] = "MYHDSB";
 char password[] = "";
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(250000);
 
   //onboard leds
   WiFiDrv::pinMode(redLED, OUTPUT);
@@ -120,27 +120,31 @@ void setup() {
 }
 
 void loop() {
+  colorSensor();
+
+  if (colorReading() == "red") {
+    WiFiDrv::analogWrite(redLED, 255);
+    WiFiDrv::analogWrite(greenLED, 0);
+    WiFiDrv::analogWrite(blueLED, 0);
+  }else if(colorReading() == "blue"){
+    WiFiDrv::analogWrite(redLED, 0);
+    WiFiDrv::analogWrite(greenLED, 0);
+    WiFiDrv::analogWrite(blueLED, 255);
+  }else if(colorReading() == "yellow"){
+    WiFiDrv::analogWrite(redLED, 255);
+    WiFiDrv::analogWrite(greenLED, 255);
+    WiFiDrv::analogWrite(blueLED, 0);
+  }
+
 
 
   //millis
   unsigned long currentMillis = millis();
   int* valueArray = readInfrared();
 
+  //colorSensor();
 
-  colorSensor();
-  if (colorReading() == "red") {
-    WiFiDrv::analogWrite(redLED, 255);
-    WiFiDrv::analogWrite(greenLED, 0);
-    WiFiDrv::analogWrite(blueLED, 0);
-  } else if (colorReading() == "green") {
-    WiFiDrv::analogWrite(redLED, 0);
-    WiFiDrv::analogWrite(greenLED, 255);
-    WiFiDrv::analogWrite(blueLED, 0);
-  } else if (colorReading() == "blue") {
-    WiFiDrv::analogWrite(redLED, 0);
-    WiFiDrv::analogWrite(greenLED, 0);
-    WiFiDrv::analogWrite(blueLED, 255);
-  }
+
   //turn around logic for wall detction
   if (currentMillis - ultrasonicMillis >= 20) {
     ultrasonicMillis = currentMillis;
@@ -159,6 +163,7 @@ void loop() {
     if (beginTurnAroundFinish) {
       // Serial.println("finished intital turn");
       if (valueArray[1] == 1 || valueArray[2] == 1) {
+
         isTurningAround = false;
         beginTurnAroundFinish = false;
         adjustableSpeed(-255, 255);
@@ -174,13 +179,6 @@ void loop() {
       adjustableSpeed(150, -150);
     }
   }
-
-
-
-
-
-
-
 
 
   //turn sequence
@@ -337,7 +335,6 @@ void loop() {
       }
     }
   }
-
 
 
 
