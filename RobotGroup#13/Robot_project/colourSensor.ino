@@ -35,22 +35,32 @@ void colorSensor() {
 
 
 
-String colorReading() {
-  if (avgRed > 30 && avgBlue > 30 && avgBlue > 30) {
-    return "white";
+char colorReading() {
+  if (avgRed > 20 && avgBlue > 20 && avgBlue > 20) {
+    //Serial.println("white");
+    return 'w';
   }
 
-  if (avgBlue < 8 && avgGreen < 8 && avgRed < 8) {
-    return "black";
+  if (avgBlue < 20 && avgGreen < 20 && avgRed < 20) {
+    //Serial.println("black");
+    return 'n'; //n = none, aka black
+    
   }
 
 
 
-  if (avgRed > 20 && avgGreen < 10 && avgBlue > 9) {
-    return "red";
+  if (avgRed > 21 && avgGreen < 10 && avgBlue > 9) {
+   // Serial.println("red");
+    return 'r';
   } else if (avgRed > 45 && avgGreen > 20 && avgBlue > 14) {
-    return "yellow";
-  } else if (avgBlue > 20) {
-    return "blue";
+    //Serial.println("yellow");
+    return 'y';
+  } else if (avgBlue > 24 && avgGreen < 20 && avgRed < 20) {
+    //Serial.println("blue");
+    return 'b';
+  }else if(avgRed > 15 && avgRed < 30 && avgGreen > 25 && avgBlue < 25){
+    return 'g';
+  }else{
+    return 'n';
   }
 }

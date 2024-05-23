@@ -4,6 +4,7 @@
 #include <utility/wifi_drv.h>
 
 String lastTurn = "";
+char lastColor;
 
 //bools
 bool blacklineDetected = false;
@@ -13,6 +14,8 @@ bool isTurningAround = false;
 bool isMovingTurn = false;
 bool adjustTurn = false;
 bool beginTurnAroundFinish = false;
+bool finishedCourse = false;
+bool skipTurn = false;
 
 //timings
 unsigned long irMillis = 0;
@@ -122,19 +125,35 @@ void setup() {
 void loop() {
   colorSensor();
 
-  if (colorReading() == "red") {
-    WiFiDrv::analogWrite(redLED, 255);
-    WiFiDrv::analogWrite(greenLED, 0);
-    WiFiDrv::analogWrite(blueLED, 0);
-  }else if(colorReading() == "blue"){
-    WiFiDrv::analogWrite(redLED, 0);
-    WiFiDrv::analogWrite(greenLED, 0);
-    WiFiDrv::analogWrite(blueLED, 255);
-  }else if(colorReading() == "yellow"){
-    WiFiDrv::analogWrite(redLED, 255);
-    WiFiDrv::analogWrite(greenLED, 255);
-    WiFiDrv::analogWrite(blueLED, 0);
+  char currentColor = colorReading();
+  if (!(currentColor == lastColor)) {
+    if (currentColor == 'r') {
+      // Serial.println("red");
+      WiFiDrv::analogWrite(redLED, 255);
+      WiFiDrv::analogWrite(greenLED, 0);
+      WiFiDrv::analogWrite(blueLED, 0);
+      finishedCourse = false;
+    } else if (currentColor == 'b') {
+      // Serial.println("blue");
+      WiFiDrv::analogWrite(redLED, 0);
+      WiFiDrv::analogWrite(greenLED, 0);
+      WiFiDrv::analogWrite(blueLED, 255);
+    } else if (currentColor == 'y') {
+      //  Serial.println("yellow");
+      WiFiDrv::analogWrite(redLED, 255);
+      WiFiDrv::analogWrite(greenLED, 255);
+      WiFiDrv::analogWrite(blueLED, 0);
+    } else if (currentColor == 'g') {
+      WiFiDrv::analogWrite(redLED, 0);
+      WiFiDrv::analogWrite(greenLED, 255);
+      WiFiDrv::analogWrite(blueLED, 0);
+      finishedCourse = true;
+    } else {
+      Serial.println(colorReading());
+    }
   }
+
+
 
 
 
@@ -245,23 +264,36 @@ void loop() {
 
       if (!isMovingTurn) {
         adjustableSpeed(200, 200);
-        delay(300);
+        delay(350);
         turnTime = currentMillis;
         isMovingTurn = true;
       }
 
-      if (beginTurnAroundFinish == false && valueArray[1] == 1 || valueArray[2] == 1) {
-        if (currentMillis - turnTime >= 850) {
-          beginTurnAroundFinish = true;
+
+      valueArray = readInfrared();
+      if (beginTurnAroundFinish == false && valueArray[1] == 1 || valueArray[2] == 1 && finishedCourse == false) {
+        if (finishedCourse == true) {
+          skipTurn = true;
+          if (skipTurn) {
+            isTurningLeft = false;
+            isMovingTurn = false;
+            beginTurnAroundFinish = false;
+            skipTurn = false;
+          }
+        } else {
+          if (currentMillis - turnTime >= 850) {
+            beginTurnAroundFinish = true;
+          }
         }
-      } else {
+      } else if (finishedCourse == false) {
         beginTurnAroundFinish = true;
-      }
+      } 
+
 
 
 
       valueArray = readInfrared();
-      if (beginTurnAroundFinish) {
+      if (beginTurnAroundFinish == true && isTurningLeft == true) {
         if (valueArray[1] == 1 || valueArray[2] == 1) {
           adjustableSpeed(255, -255);
           delay(40);
@@ -271,11 +303,11 @@ void loop() {
           isTurningLeft = false;
           beginTurnAroundFinish = false;
           //Serial.println("finished");
-        } else if (isMovingTurn) {
+        } else if (isMovingTurn == true && isTurningLeft == true) {
           adjustableSpeed(-150, 150);
           // Serial.println("finished intital");
         }
-      } else {
+      } else if (isTurningLeft == true) {
         adjustableSpeed(-150, 150);
         //Serial.println("doing inital");
       }
@@ -292,11 +324,22 @@ void loop() {
         isMovingTurn = true;
       }
 
+      valueArray = readInfrared();
       if (beginTurnAroundFinish == false && valueArray[1] == 1 || valueArray[2] == 1) {
-        if (currentMillis - turnTime >= 850) {
-          beginTurnAroundFinish = true;
+        if (finishedCourse == true) {
+          skipTurn = true;
+          if (skipTurn) {
+            isTurningRight = false;
+            isMovingTurn = false;
+            beginTurnAroundFinish = false;
+            skipTurn = false;
+          }
+        } else {
+          if (currentMillis - turnTime >= 850) {
+            beginTurnAroundFinish = true;
+          }
         }
-      } else {
+      } else if (finishedCourse == false) {
         beginTurnAroundFinish = true;
       }
 
@@ -305,8 +348,10 @@ void loop() {
 
 
 
+
+
       valueArray = readInfrared();
-      if (beginTurnAroundFinish) {
+      if (beginTurnAroundFinish == true && isTurningRight == true) {
         if (valueArray[1] == 1 || valueArray[2] == 1) {
           adjustableSpeed(-255, 255);
           delay(50);
@@ -315,10 +360,10 @@ void loop() {
           isTurningRight = false;
           beginTurnAroundFinish = false;
           isMovingTurn = false;
-        } else if (isMovingTurn) {
+        } else if (isMovingTurn == true && isTurningRight == true) {
           adjustableSpeed(150, -150);
         }
-      } else {
+      } else if (isTurningRight == true) {
         adjustableSpeed(150, -150);
       }
     }
@@ -335,6 +380,10 @@ void loop() {
       }
     }
   }
+
+
+  lastColor = currentColor;
+
 
 
 
