@@ -264,14 +264,14 @@ void loop() {
 
       if (!isMovingTurn) {
         adjustableSpeed(200, 200);
-        delay(350);
+        delay(300);
         turnTime = currentMillis;
         isMovingTurn = true;
       }
 
 
       valueArray = readInfrared();
-      if (beginTurnAroundFinish == false && valueArray[1] == 1 || valueArray[2] == 1 && finishedCourse == false) {
+      if (beginTurnAroundFinish == false && (valueArray[1] == 1 || valueArray[2] == 1)) {
         if (finishedCourse == true) {
           skipTurn = true;
           if (skipTurn) {
@@ -285,9 +285,9 @@ void loop() {
             beginTurnAroundFinish = true;
           }
         }
-      } else if (finishedCourse == false) {
+      } else if (skipTurn == false) {
         beginTurnAroundFinish = true;
-      } 
+      }
 
 
 
@@ -299,9 +299,10 @@ void loop() {
           delay(40);
           stop();
           delay(250);
-          isMovingTurn = false;
           isTurningLeft = false;
           beginTurnAroundFinish = false;
+          isMovingTurn = false;
+          skipTurn = false;
           //Serial.println("finished");
         } else if (isMovingTurn == true && isTurningLeft == true) {
           adjustableSpeed(-150, 150);
@@ -339,7 +340,7 @@ void loop() {
             beginTurnAroundFinish = true;
           }
         }
-      } else if (finishedCourse == false) {
+      } else if (skipTurn == false) {
         beginTurnAroundFinish = true;
       }
 
@@ -360,6 +361,7 @@ void loop() {
           isTurningRight = false;
           beginTurnAroundFinish = false;
           isMovingTurn = false;
+          skipTurn = false;
         } else if (isMovingTurn == true && isTurningRight == true) {
           adjustableSpeed(150, -150);
         }
