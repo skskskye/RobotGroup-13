@@ -123,65 +123,62 @@ void setup() {
 }
 
 void loop() {
-  colorSensor();
+  colorSensor(); //running color sensor code, to check colours every cycle
 
-  char currentColor = colorReading();
-  if (!(currentColor == lastColor)) {
-    if (currentColor == 'r') {
+  char currentColor = colorReading(); // make the current color into a var
+  if (!(currentColor == lastColor)) { //checking if the currnet color is differnet tahn the previous
+    if (currentColor == 'r') { //checking if the color is red
       // Serial.println("red");
       WiFiDrv::analogWrite(redLED, 255);
       WiFiDrv::analogWrite(greenLED, 0);
       WiFiDrv::analogWrite(blueLED, 0);
-      finishedCourse = false;
-    } else if (currentColor == 'b') {
+      finishedCourse = false; //red is beginning of course
+    } else if (currentColor == 'b') { //checking if its blue
       // Serial.println("blue");
       WiFiDrv::analogWrite(redLED, 0);
       WiFiDrv::analogWrite(greenLED, 0);
       WiFiDrv::analogWrite(blueLED, 255);
-    } else if (currentColor == 'y') {
+    } else if (currentColor == 'y') { //checking if its yellow
       //  Serial.println("yellow");
       WiFiDrv::analogWrite(redLED, 255);
       WiFiDrv::analogWrite(greenLED, 255);
       WiFiDrv::analogWrite(blueLED, 0);
-    } else if (currentColor == 'g') {
+    } else if (currentColor == 'g') { //checking if its green
       WiFiDrv::analogWrite(redLED, 0);
       WiFiDrv::analogWrite(greenLED, 255);
       WiFiDrv::analogWrite(blueLED, 0);
-      finishedCourse = true;
+      finishedCourse = true; //green means end of course, so we say we finished the course
     } else {
-      Serial.println(colorReading());
+      Serial.println(colorReading()); //debug if all fails
     }
   }
-
-
-
-
 
   //millis
   unsigned long currentMillis = millis();
   int* valueArray = readInfrared();
 
-  //colorSensor();
 
 
   //turn around logic for wall detction
   if (currentMillis - ultrasonicMillis >= 20) {
     ultrasonicMillis = currentMillis;
     //Serial.println("time!");
-    if (ultrasonicDist() <= 9 && isTurningAround == false) {
+    if (ultrasonicDist() <= 9 && isTurningAround == false) { //only check the dist if we arent in a turn around state, aka wall already detected
       // Serial.println("wall detected");
       isTurningAround = true;
-      turnTime = currentMillis;
+      turnTime = currentMillis; //setting turn time to current time
     }
   }
-  if (isTurningAround) {
-    if (currentMillis - turnTime >= 700) {
+
+
+  if (isTurningAround) { 
+    if (currentMillis - turnTime >= 700) { //700 ms after initiaql turn around, we say we begin it
       beginTurnAroundFinish = true;
     }
 
-    if (beginTurnAroundFinish) {
+    if (beginTurnAroundFinish) { 
       // Serial.println("finished intital turn");
-      if (valueArray[1] == 1 || valueArray[2] == 1) {
+      if (valueArray[1] == 1 || valueArray[2] == 1) { //when the turn aruond is "begun" check if its finished with two sensors
 
         isTurningAround = false;
         beginTurnAroundFinish = false;
@@ -190,10 +187,10 @@ void loop() {
         stop();
         delay(1000);
         // Serial.println("turn is done");
-      } else {
+      } else { // if turn isnt finish, we continue turning
         adjustableSpeed(150, -150);
       }
-    } else {
+    } else { //continue turning if we arent down the initial turn bit
       // Serial.println("not finished intital turn");
       adjustableSpeed(150, -150);
     }
@@ -201,11 +198,13 @@ void loop() {
 
 
   //turn sequence
-  if (isTurningAround == false) {
+  if (isTurningAround == false) { //only run all of this if we arent in a turn around state
 
-    if (isTurningLeft == false && isTurningRight == false && blacklineDetected == false) {
+    if (isTurningLeft == false && isTurningRight == false && blacklineDetected == false) { //only run this if we arent in ANY kind of turn around state, (regular turn around)
 
-      if (valueArray[0] == 1 && firstDetectionTime1 == 0) {
+
+      //checking which sensors are on and off, within a certain amount of time
+      if (valueArray[0] == 1 && firstDetectionTime1 == 0) { 
         //Serial.print("sensor one detected ");
         //Serial.println(firstDetectionTime1);
         firstDetectionTime1 = currentMillis;
@@ -217,11 +216,13 @@ void loop() {
       }
 
 
+      //applying if we are on a black line or turning left or turning right, if our sensor has been detected, after a certain amount of time has passed
       if (firstDetectionTime1 > 0 && currentMillis - firstDetectionTime1 < sensorCheckThreshold && firstDetectionTime4 > 0 && currentMillis - firstDetectionTime4 < sensorCheckThreshold) {
-        blacklineDetected = true;
+        blacklineDetected = true; 
         isTurningLeft = false;
         isTurningRight = false;
-        firstDetectionTime1 = 0;
+        //resetting detection time to 0
+        firstDetectionTime1 = 0; 
         firstDetectionTime4 = 0;
         //Serial.println("All detected");
 
@@ -244,9 +245,8 @@ void loop() {
       }
     }
 
-
-    if (blacklineDetected == true) {
-      if (lastTurn == "right") {
+    if (blacklineDetected == true) { //when we are on a black line
+      if (lastTurn == "right") { //checking the last turn, depending what it is, we turn the same direction
         isTurningRight = true;
         isTurningLeft = false;
       } else if (lastTurn == "left") {
@@ -256,46 +256,40 @@ void loop() {
       blacklineDetected = false;
     }
 
-    if (isTurningLeft == true && isTurningRight == false) {
+    if (isTurningLeft == true && isTurningRight == false) { //checking if we are turning left
       isTurningLeft = true;
-      lastTurn = "left";
+      lastTurn = "left"; //setting the last turn we did to the current  one
 
-
-
-      if (!isMovingTurn) {
+      if (!isMovingTurn) { //a timer made, so we can have a "bump" out
         adjustableSpeed(200, 200);
         delay(300);
         turnTime = currentMillis;
         isMovingTurn = true;
       }
 
-
-      valueArray = readInfrared();
-      if (beginTurnAroundFinish == false && (valueArray[1] == 1 || valueArray[2] == 1)) {
-        if (finishedCourse == true) {
+      valueArray = readInfrared(); //checking the infared sensors again
+      if (beginTurnAroundFinish == false && (valueArray[1] == 1 || valueArray[2] == 1)) { //if our beginning of our turn around isnt done, but our two sensors have been detected, we know we are on an intersectionj
+        if (finishedCourse == true) { //if we finish the course, we skip this tourney
           skipTurn = true;
-          if (skipTurn) {
+          if (skipTurn) { 
             isTurningLeft = false;
             isMovingTurn = false;
             beginTurnAroundFinish = false;
             skipTurn = false;
           }
         } else {
-          if (currentMillis - turnTime >= 850) {
+          if (currentMillis - turnTime >= 850) { //if we havent finished the course, then we have a slight amount of time for the turn to go
             beginTurnAroundFinish = true;
           }
         }
-      } else if (skipTurn == false) {
+      } else if (skipTurn == false) { //if both is false, then we just assume its not on an intersection and ar egular turn, so ignore all logic
         beginTurnAroundFinish = true;
       }
 
-
-
-
-      valueArray = readInfrared();
-      if (beginTurnAroundFinish == true && isTurningLeft == true) {
-        if (valueArray[1] == 1 || valueArray[2] == 1) {
-          adjustableSpeed(255, -255);
+      valueArray = readInfrared(); //getting the infared values
+      if (beginTurnAroundFinish == true && isTurningLeft == true) { //checking if our beginning of turn around  has finished, and we are turning loeft
+        if (valueArray[1] == 1 || valueArray[2] == 1) { //checking if sensors are detected, if so assume turn is done
+          adjustableSpeed(255, -255); //reverse turn to adjust
           delay(40);
           stop();
           delay(250);
@@ -304,18 +298,16 @@ void loop() {
           isMovingTurn = false;
           skipTurn = false;
           //Serial.println("finished");
-        } else if (isMovingTurn == true && isTurningLeft == true) {
+        } else if (isMovingTurn == true && isTurningLeft == true) { //if our turn isnt done, we keep turning
           adjustableSpeed(-150, 150);
           // Serial.println("finished intital");
         }
-      } else if (isTurningLeft == true) {
+      } else if (isTurningLeft == true) { //if the intital isnt done we keep turning
         adjustableSpeed(-150, 150);
         //Serial.println("doing inital");
       }
 
-
-
-    } else if (isTurningRight == true && isTurningLeft == false) {
+    } else if (isTurningRight == true && isTurningLeft == false) { //exact same logic as turn left, but with adjustable speed being used to turn it right
       isTurningRight = true;
       lastTurn = "right";
       if (!isMovingTurn) {
@@ -344,13 +336,6 @@ void loop() {
         beginTurnAroundFinish = true;
       }
 
-
-
-
-
-
-
-
       valueArray = readInfrared();
       if (beginTurnAroundFinish == true && isTurningRight == true) {
         if (valueArray[1] == 1 || valueArray[2] == 1) {
@@ -370,27 +355,22 @@ void loop() {
       }
     }
 
-    if (isTurningLeft == false && isTurningRight == false) {
-      if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) {
+    if (isTurningLeft == false && isTurningRight == false) { //if we are just going on the black line trying to go straight, the logic to stay on it
+      if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 1 && valueArray[3] == 0) { //if we both are on thel ine, just keep moving both motors same speed
         adjustableSpeed(200, 200);
-      } else if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0) {
+      } else if (valueArray[0] == 0 && valueArray[1] == 1 && valueArray[2] == 0 && valueArray[3] == 0) { //if left on it and the other isnt, adjust to make sure they are both on it
         adjustableSpeed(200, 130);
         //Serial.println("adjust 1");
-      } else if (valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0) {
+      } else if (valueArray[0] == 0 && valueArray[1] == 0 && valueArray[2] == 1 && valueArray[3] == 0) { //if right on it, and other isnt, adjust so both are
         adjustableSpeed(130, 200);
         //Serial.println("adjust 2");
       }
     }
   }
 
+  lastColor = currentColor; //our last colour was our current color, will differenrate if a new color is fouind
 
-  lastColor = currentColor;
-
-
-
-
-
-
+  //debug
   // Serial.print(valueArray[0]);
   // Serial.print(" ");
   // Serial.print(valueArray[1]);
